@@ -119,34 +119,29 @@ def astar(problem: SearchProblem) -> Optional[Solution]:
     
     init_node: SearchNode = SearchNode(state=problem.initial_state, parent=None, prev_action=None, cost=0.0)
     queue: PriorityQueue = PriorityQueue()
-    queue.push(item=init_node, priority=0)
-    visited: set = set()
+    
+    initial_priority = problem.heuristic(problem_state=problem.initial_state)
+    queue.push(item=init_node, priority=initial_priority)
+
+    visited: dict = {}  # Dictionnaire des états visités avec leur coût minimal
 
     while not queue.isEmpty():
         
         current: SearchNode = queue.pop()
 
-        if current not in visited:
+        if current.state in visited and visited[current.state] <= current.cost: continue
+        visited[current.state] = current.cost
 
-            visited.add(current)
-
-            if problem.is_goal_state(state=current.state):
-                # found a solution
-                break
-
-            else:
-
-                accessibles: list = problem.get_successors(state=current.state)
-                for s, a in accessibles:
-                    new_cost: float = current.cost + problem.heuristic(problem_state=s)
-                    node: SearchNode = SearchNode(state=s, parent=current, prev_action=a, cost=new_cost)
-                    queue.push(item=node, priority=node.cost)
+        if problem.is_goal_state(state=current.state): return Solution.from_node(node=current)
 
 
-    if problem.is_goal_state(state=current.state):
-        return Solution.from_node(node=current)
-    else:
-        return None
+        for s, a in problem.get_successors(state=current.state):
+    
+            new_cost: float = current.cost + 1 + problem.heuristic(problem_state=s)
+            node = SearchNode(state=s, parent=current, prev_action=a, cost=new_cost)
+            queue.push(item=node, priority=new_cost)
+
+    return None
 
 
 def visualize_solution(w: World, solution: Solution) -> None:
@@ -171,13 +166,12 @@ if __name__ == '__main__':
 
     world_map: str = \
     """
-    S0 . . @ X
-    .  . . @ @
-    .  . . . .
-    .  . . . .
+    . . . . . . 
+    . S0 . . X . 
+    . . . . . .
     """
 
     w: World = World(map_str=world_map)
-    p: SearchProblem = ExitProblem(world=w)
-    s: Solution = dfs(problem=p)
+    p: SearchProblem = CornerProblem(world=w)
+    s: Solution = bfs(problem=p)
     if s: visualize_solution(w=w, solution=s)
