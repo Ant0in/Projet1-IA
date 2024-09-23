@@ -81,7 +81,10 @@ def dfs(problem: SearchProblem) -> Optional[Solution]:
             accessibles: list = problem.get_successors(state=current.state)
             for s, a in accessibles: stack.append(SearchNode(state=s, parent=current, prev_action=a))
 
-    return Solution.from_node(node=current)
+    if problem.is_goal_state(state=current.state):
+        return Solution.from_node(node=current)
+    else:
+        return None
 
 
 def bfs(problem: SearchProblem) -> Optional[Solution]:
@@ -106,8 +109,10 @@ def bfs(problem: SearchProblem) -> Optional[Solution]:
             accessibles: list = problem.get_successors(state=current.state)
             for s, a in accessibles: queue.push(item=SearchNode(state=s, parent=current, prev_action=a), priority=0)
 
-    print(len(visited))
-    return Solution.from_node(node=current)
+    if problem.is_goal_state(state=current.state):
+        return Solution.from_node(node=current)
+    else:
+        return None
 
 
 def astar(problem: SearchProblem) -> Optional[Solution]:
@@ -137,7 +142,11 @@ def astar(problem: SearchProblem) -> Optional[Solution]:
                     node: SearchNode = SearchNode(state=s, parent=current, prev_action=a, cost=new_cost)
                     queue.push(item=node, priority=node.cost)
 
-    return Solution.from_node(node=current)
+
+    if problem.is_goal_state(state=current.state):
+        return Solution.from_node(node=current)
+    else:
+        return None
 
 
 def visualize_solution(w: World, solution: Solution) -> None:
@@ -162,12 +171,13 @@ if __name__ == '__main__':
 
     world_map: str = \
     """
-    S0 . . . . . . . . . . .
-    .  . . . . . . . . . . .
-    .  . . . . . . . . . . .
-    .  . . . . . . . . . . .
-    .  . . . . . . . . . . X
+    S0 . . @ X
+    .  . . @ @
+    .  . . . .
+    .  . . . .
     """
 
     w: World = World(map_str=world_map)
-    p: CornerProblem = CornerProblem(world=w)
+    p: SearchProblem = ExitProblem(world=w)
+    s: Solution = dfs(problem=p)
+    if s: visualize_solution(w=w, solution=s)
