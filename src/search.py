@@ -5,6 +5,8 @@ from typing import Generic, Optional, TypeVar
 from lle import Action, WorldState, World
 from priority_queue import PriorityQueue
 from problem import SearchProblem, GemProblem, ExitProblem, CornerProblem
+import cv2
+
 
 
 S = TypeVar("S", bound=WorldState)
@@ -59,61 +61,72 @@ class SearchNode:
 
 
 
+def visualize_solution(w: World, solution: Solution) -> None:
+    
+    # Little method used to visualize solutions using openCV2
+    if not isinstance(solution, Solution): print('No solution found!'); return
+
+    def show_img(img, step: int, action: Action) -> None:
+        cv2.imshow("Visualisation", img)
+        cv2.waitKey(1)
+        input(f'[Step {step}] Action : {action} ')
+
+    show_img(img=w.get_image(), step=0, action='Initial state')
+    for step, a in enumerate(solution.actions):
+        w.step(action=a)
+        show_img(img=w.get_image(), step=step+1, action=a)
+    print(f'[G] Goal reached in {len(solution.actions)} steps.')
 
 def dfs(problem: SearchProblem) -> Optional[Solution]:
     
-    init_node: SearchNode = SearchNode(state=problem.initial_state, parent=None, prev_action=None)
-    stack: list = [init_node]
+    # DFS Method for algorithmic search in a graph.
+    stack: list[SearchNode] = [SearchNode(state=problem.initial_state, parent=None, prev_action=None)]
     visited: set = set()
+    found_solution: bool = False
 
-    while stack:
+    # while we have element to explore / we did not find any solution ;
+    while stack and not found_solution:
 
         current: SearchNode = stack.pop()
-
-        if current not in visited:
-            
+        if current not in visited:            
             visited.add(current)
-        
+    
             if problem.is_goal_state(state=current.state):
-                # found a solution
+                found_solution = True
                 break
 
-            accessibles: list = problem.get_successors(state=current.state)
-            for s, a in accessibles: stack.append(SearchNode(state=s, parent=current, prev_action=a))
+            # We get every sucessors to current and add them to the stack
+            successors: list = problem.get_successors(state=current.state)
+            for s, a in successors: stack.append(SearchNode(state=s, parent=current, prev_action=a))
 
-    if problem.is_goal_state(state=current.state):
-        return Solution.from_node(node=current)
-    else:
-        return None
-
+    return Solution.from_node(node=current) if found_solution else None
 
 def bfs(problem: SearchProblem) -> Optional[Solution]:
     
-    init_node: SearchNode = SearchNode(state=problem.initial_state, parent=None, prev_action=None)
+    # BFS for algorithmic search in a graph.
     queue: PriorityQueue = PriorityQueue()
-    queue.push(item=init_node, priority=0)
+    queue.push(item=SearchNode(state=problem.initial_state, parent=None, prev_action=None), priority=0)
     visited: set = set()
+    found_solution: bool = False
 
-    while not queue.isEmpty():
-        
+    # while we have element to explore / we did not find any solution ;
+    while not queue.isEmpty() and not found_solution:
+
         current: SearchNode = queue.pop()
-
         if current not in visited:
-            
             visited.add(current)
 
             if problem.is_goal_state(state=current.state):
-                # found a solution
+                found_solution = True
                 break
 
-            accessibles: list = problem.get_successors(state=current.state)
-            for s, a in accessibles: queue.push(item=SearchNode(state=s, parent=current, prev_action=a), priority=0)
+            # We get every sucessors to current and add them to the queue, with the
+            # best option being the lowest value using heuristique.
+            successors: list = problem.get_successors(state=current.state)
+            successors.sort(key=lambda sucessor: problem.heuristic(sucessor[0]))
+            for s, a in successors: queue.push(item=SearchNode(state=s, parent=current, prev_action=a), priority=0)
 
-    if problem.is_goal_state(state=current.state):
-        return Solution.from_node(node=current)
-    else:
-        return None
-
+    return Solution.from_node(node=current) if found_solution else None
 
 def astar(problem: SearchProblem) -> Optional[Solution]:
     
@@ -144,34 +157,19 @@ def astar(problem: SearchProblem) -> Optional[Solution]:
     return None
 
 
-def visualize_solution(w: World, solution: Solution) -> None:
-    
-    assert isinstance(solution, Solution)
-
-    import cv2
-    def show_img(img) -> None:
-        cv2.imshow("Visualisation", img)
-        cv2.waitKey(1)
-        input("push enter")
-
-    show_img(img=w.get_image())
-    for a in solution.actions:
-        w.step(action=a)
-        show_img(img=w.get_image())
-
-
-
 
 if __name__ == '__main__':
 
     world_map: str = \
     """
-    . . . . . . 
-    . S0 . . X . 
-    . . . . . .
+    . . . . . . . . . . . .
+    .  . . . . . . . . G . .
+    S0  . . . . . . . . . . .
+    @  @ @ @ @ @ @ @ @ G . X
+    G  . . . . . . . . . . .
     """
 
     w: World = World(map_str=world_map)
     p: SearchProblem = CornerProblem(world=w)
     s: Solution = bfs(problem=p)
-    if s: visualize_solution(w=w, solution=s)
+    visualize_solution(w=w, solution=s)

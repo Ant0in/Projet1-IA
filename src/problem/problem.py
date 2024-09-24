@@ -16,15 +16,22 @@ class SearchProblem(ABC, Generic[S]):
     The generic parameter S is the type of the problem state.
     """
 
-    def __init__(self, world: World):
+    def __init__(self, world: World) -> None:
         
         self.world: World = world
         self.world.reset()
         self.initial_state: WorldState = world.get_state()
+        self.check_if_only_one_agent(state=self.initial_state)
 
-    @abstractmethod
-    def is_goal_state(self, problem_state: S) -> bool:
-        """Whether the given state is the goal state"""
+    def load_state(self, state: S) -> None:
+        self.world.set_state(state=state)
+
+    def restore_initial_state(self) -> None:
+        self.load_state(state=self.initial_state)
+
+    def check_if_only_one_agent(self, state: S) -> None:
+        cond: bool = (len(state.agents_positions) == 1 and len(state.agents_alive) == 1)
+        assert cond, f'[E] This search problem ({type(self)}) is designed for 1 agent only.'
 
     def get_successors(self, state: S) -> list[tuple[WorldState, Action]]:
         
@@ -46,34 +53,31 @@ class SearchProblem(ABC, Generic[S]):
             AssertionError: If there is more than one agent in the given state.
         """
 
-        old: WorldState = self.world.get_state()
-        self.world.set_state(state=state)
-        self.check_if_only_one_agent()
+        self.load_state(state=state)
+        self.check_if_only_one_agent(state=state)
 
         ret: list = list()
-        available_actions: list[list[Action]] = self.world.available_actions()[0]
+        available_actions: list[Action] = self.world.available_actions()[0]
         if self.world.agents[0].is_dead: return ret  # We're returning no actions if the agent is dead
 
         # Simulate each action by restoring the world state 'state', applying the action, and storing the resulting state-action pair.
         for a in available_actions:
-            self.world.set_state(state=state)
+            self.load_state(state=state)
             self.world.step(action=a)
             ret.append((self.world.get_state(), a))
 
-        # Restoring previous world state.
-        self.world.set_state(state=old)
+        self.restore_initial_state()
         return ret
     
     @staticmethod
     def manhattan_distance(p1: tuple[int, int], p2: tuple[int, int]) -> float:
         return abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])
-    
-    def check_if_only_one_agent(self) -> None:
-        assert len(self.world.agents) == 1, f'[E] This search problem ({type(self)}) is designed for 1 agent only. (got {len(self.world.agents)})'
 
+    @abstractmethod
+    def is_goal_state(self, problem_state: S) -> bool:
+        """Whether the given state is the goal state"""
+
+    @abstractmethod
     def heuristic(self, problem_state: S) -> float:
-        # Manhattan distance heuristic.
-        agent_pos: tuple[int, int] = problem_state.agents_positions[0]
-        exit_pos: tuple[int, int] = self.world.exit_pos[0]
-        return self.manhattan_distance(p1=agent_pos, p2=exit_pos)
+        """Heuristic made to check viability of state nodes"""
 

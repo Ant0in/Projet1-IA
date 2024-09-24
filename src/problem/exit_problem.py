@@ -12,20 +12,27 @@ class ExitProblem(SearchProblem[WorldState]):
     def is_goal_state(self, state: WorldState) -> bool:
         
         # The goal state requires that the agent is alive and positioned on the exit tile.
-
-        old: WorldState = self.world.get_state()
-        self.world.set_state(state=state)
-        self.check_if_only_one_agent()
+        self.load_state(state=state)
+        self.check_if_only_one_agent(state=state)
 
         is_agent_alive: bool = state.agents_alive[0]
         has_arrived: bool = self.world.agents[0].has_arrived
 
-        self.world.set_state(state=old)  # Restoring previous state.
+        self.restore_initial_state()
         return has_arrived and is_agent_alive
     
     def heuristic(self, problem_state: WorldState) -> float:
         
         # In this instance of the problem (exit problem), we are focusing solely on the distance
-        # between the agent's position and the exit. Therefore, we will use the Manhattan distance formula.
-        return super().heuristic(problem_state=problem_state)
-    
+        # between the agent's position and the nearest exit. 
+        # Therefore, we will use the Manhattan distance formula.
+        
+        self.check_if_only_one_agent(state=problem_state)
+        self.load_state(state=problem_state)
+        
+        agent_position: tuple[int, int] = problem_state.agents_positions[0]
+        exit_pos: list[tuple[int, int]] = self.world.exit_pos
+
+        distances: list[float] = [self.manhattan_distance(p1=agent_position, p2=ep) for ep in exit_pos]
+        self.restore_initial_state()
+        return min(distances)
