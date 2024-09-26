@@ -82,24 +82,22 @@ def dfs(problem: SearchProblem) -> Optional[Solution]:
     # DFS Method for algorithmic search in a graph.
     stack: list[SearchNode] = [SearchNode(state=problem.initial_state, parent=None, prev_action=None)]
     visited: set = set()
-    found_solution: bool = False
 
     # while we have element to explore / we did not find any solution ;
-    while stack and not found_solution:
+    while stack:
 
         current: SearchNode = stack.pop()
         if current not in visited:            
             visited.add(current)
     
             if problem.is_goal_state(state=current.state):
-                found_solution = True
-                break
+                return Solution.from_node(node=current)
 
             # We get every sucessors to current and add them to the stack
             successors: list = problem.get_successors(state=current.state)
             for s, a in successors: stack.append(SearchNode(state=s, parent=current, prev_action=a))
 
-    return Solution.from_node(node=current) if found_solution else None
+    return None
 
 def bfs(problem: SearchProblem) -> Optional[Solution]:
     
@@ -107,37 +105,35 @@ def bfs(problem: SearchProblem) -> Optional[Solution]:
     queue: PriorityQueue = PriorityQueue()
     queue.push(item=SearchNode(state=problem.initial_state, parent=None, prev_action=None), priority=0)
     visited: set = set()
-    found_solution: bool = False
 
-    # while we have element to explore / we did not find any solution ;
-    while not queue.isEmpty() and not found_solution:
+    # while we have element to explore;
+    while not queue.isEmpty():
 
         current: SearchNode = queue.pop()
         if current not in visited:
             visited.add(current)
 
             if problem.is_goal_state(state=current.state):
-                found_solution = True
-                break
+                return Solution.from_node(node=current)
 
-            # We get every sucessors to current and add them to the queue, with the
-            # best option being the lowest value using heuristique.
+            # We get every sucessors to current and add them to the queue
             successors: list = problem.get_successors(state=current.state)
-            successors.sort(key=lambda sucessor: problem.heuristic(sucessor[0]))
             for s, a in successors: queue.push(item=SearchNode(state=s, parent=current, prev_action=a), priority=0)
 
-    return Solution.from_node(node=current) if found_solution else None
+    return None
 
 def astar(problem: SearchProblem) -> Optional[Solution]:
     
+    # A* for algorithmic search in a graph.
     init_node: SearchNode = SearchNode(state=problem.initial_state, parent=None, prev_action=None, cost=0.0)
     queue: PriorityQueue = PriorityQueue()
     
     initial_priority = problem.heuristic(problem_state=problem.initial_state)
     queue.push(item=init_node, priority=initial_priority)
 
-    visited: dict = {}  # Dictionnaire des états visités avec leur coût minimal
-
+    visited: dict = {}
+    
+    # while we have element to explore
     while not queue.isEmpty():
         
         current: SearchNode = queue.pop()
@@ -147,10 +143,10 @@ def astar(problem: SearchProblem) -> Optional[Solution]:
 
         if problem.is_goal_state(state=current.state): return Solution.from_node(node=current)
 
-
         for s, a in problem.get_successors(state=current.state):
     
-            new_cost: float = current.cost + 1 + problem.heuristic(problem_state=s)
+            estimated_distance: float = 1 + problem.heuristic(problem_state=s)
+            new_cost: float = current.cost + estimated_distance
             node = SearchNode(state=s, parent=current, prev_action=a, cost=new_cost)
             queue.push(item=node, priority=new_cost)
 
@@ -171,5 +167,5 @@ if __name__ == '__main__':
 
     w: World = World(map_str=world_map)
     p: SearchProblem = CornerProblem(world=w)
-    s: Solution = bfs(problem=p)
+    s: Solution = astar(problem=p)
     visualize_solution(w=w, solution=s)
