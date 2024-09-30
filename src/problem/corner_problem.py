@@ -65,7 +65,7 @@ class CornerProblem(SearchProblem[CornerState]):
 
         for idx, c in enumerate(self.corners):
             if c == agent_pos:
-                state.visited_corners[idx] = True  # Mise à jour directe de la liste
+                state.visited_corners[idx] = True
             else: pass
 
     def heuristic(self, problem_state: CornerState) -> float:
