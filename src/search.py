@@ -226,15 +226,4 @@ class TestHelper:
 
 
 if __name__ == '__main__':
-
-    world_map = ''.join(open(r"C:\Users\Antoine\Desktop\Projet-IA\src\map.txt", 'r').readlines()).replace('S', 'S0')
-    test = TestHelper(world_map)
-    sol: dict = test.run_tests(pr=test.get_exit_problem())
-
-    data: dict = {
-        'DFS': {'time_elapsed': 76, 'nodes_visited': 1052},
-        'BFS': {'time_elapsed': 50, 'nodes_visited': 686},
-        'ASTAR': {'time_elapsed': 44, 'nodes_visited': 342},
-    }
-
-    TestHelper.make_graph(data=data)
+    ...

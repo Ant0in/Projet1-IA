@@ -1,0 +1,53 @@
+
+
+1. Introduction
+
+L'objectif de ce rapport est d'analyser et de comparer l'efficacité des algorithmes DFS (Depth-First Search), BFS (Breadth-First Search) et A* (A-star) à travers une série de tests conçus pour évaluer leurs forces et faiblesses respectives. Ces algorithmes seront évalués dans différents contextes de recherche sur des cartes simulées, mettant en lumière leurs comportements distincts dans des scénarios variés.
+
+
+2. Méthodologie
+
+Afin d'étudier les performances de chaque algorithme, plusieurs cartes complexes ont été générées, chacune représentant des défis spécifiques en termes de résolution de problème de recherche. Les algorithmes seront appliqués à ces cartes afin d'identifier leurs capacités respectives à atteindre un objectif donné, tout en prenant en compte plusieurs critères de performance.
+
+Les principaux indicateurs évalués seront :
+
+- L'efficacité de l'algorithme, mesurée par le nombre de nœuds visités au cours du processus de recherche.
+- La rapidité d'exécution, évaluée par le temps d'exécution en millisecondes (ms).
+- La qualité de la solution, notamment en termes de longueur du chemin trouvé et d'optimalité.
+
+Ces mesures étant sensibles à la variabilité, chaque test sera répété cinq fois afin de minimiser les effets des fluctuations inhérentes à la performance des systèmes. La moyenne arithmétique des résultats sera ensuite calculée, puis arrondie au supérieur, permettant ainsi d'obtenir des données plus robustes et d'éviter tout biais potentiel dans l'analyse des performances. Nous parlerons cependant pendant ce rapport des expériences menées comme étant singulières, par soucis de lisibilité.
+
+
+3. Expériences :
+
+...
+
+
+4. Discussion :
+
+Nous allons maintenant procéder à une analyse comparative des forces et faiblesses des algorithmes étudiés en nous appuyant sur les résultats obtenus pour différentes configurations de cartes.
+
+Carte 'EMPTYROOM'
+Cette carte met en évidence les limitations de DFS par rapport à BFS et A*. DFS a nécessité un total de 2622 étapes, contre seulement 36 étapes pour BFS et A*. La raison en est que DFS explore souvent des branches dans leur intégralité avant de revenir en arrière, ce qui peut entraîner un parcours inefficace. En revanche, A* optimise le nombre de nœuds visités grâce à son heuristique, tandis que BFS explore uniformément jusqu'à trouver la sortie.
+
+Sur cette carte, DFS procède de manière peu efficiente, zigzaguant à travers le graphe, tandis que BFS et A* trouvent rapidement la sortie en parcourant les nœuds les plus proches de manière plus systématique.
+
+Carte 'FULLGEMS'
+Sur cette carte riche en gemmes, DFS surpasse A* et BFS. Les algorithmes perfectionnistes comme A* et BFS cherchent des solutions optimales, ce qui augmente leur temps de calcul, surtout en raison de la collecte des gemmes. A* doit constamment évaluer les distances, et BFS explore exhaustivement, ce qui ralentit leur exécution.
+
+DFS, moins préoccupé par l’optimalité, parcourt le graphe sans chercher à minimiser les déplacements, ramassant des gemmes en chemin sans viser une collecte complète. Ce comportement aléatoire permet à DFS de trouver une solution relativement rapidement, bien que non optimale. Il reste cependant important de préciser que la solution de DFS est extrêmement mauvaise, comptabilisant 419 étapes contre 37 pour la solution optimale.
+
+Carte 'ZIGZAG'
+Sur la carte 'ZIGZAG', DFS se montre également plus performant que BFS et A*. Les couloirs en zigzag et les culs-de-sac posent problème à BFS, qui explore systématiquement les extrémités de ces culs-de-sac pour récupérer les gemmes, augmentant ainsi le temps d'exécution. A* est aussi affecté par son heuristique, qui le pousse à explorer des chemins non optimaux en raison de la complexité des obstacles, notamment les murs.
+
+En revanche, DFS suit naturellement les chemins en zigzag jusqu'à leur terme avant de revenir en arrière, ce qui s'avère plus efficace dans cette configuration. Néanmoins, bien que plus rapide à exécuter, la solution trouvée par DFS est en moyenne deux fois plus longue que celles obtenues par BFS et A*, ce qui est acceptable compte tenu du temps d'exécution de A* et BFS.
+
+
+5. LLM :
+
+Dans cette courte partie, nous discuterons de l'utilisation des LLM dans le cadre du projet. Aucun LLM n'a été utilisé pour l'aspect implémentation ainsi que la compréhension du projet. Cependant, ce rapport à été corrigé du point de vue de la syntaxe et de la grammaire par DeepL ainsi qu'un modèle GPT.
+
+
+6. Conclusion :
+
+...
