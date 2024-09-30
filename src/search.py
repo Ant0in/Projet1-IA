@@ -6,6 +6,9 @@ from lle import Action, WorldState, World
 from priority_queue import PriorityQueue
 from problem import SearchProblem, GemProblem, ExitProblem, CornerProblem
 import cv2
+import time
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 
@@ -61,7 +64,7 @@ class SearchNode:
 
 
 
-def visualize_solution(w: World, solution: Solution) -> None:
+def visualize_solution(w: World, solution: Solution, name: str) -> None:
     
     # Little method used to visualize solutions using openCV2
     if not isinstance(solution, Solution): print('No solution found!'); return
@@ -69,15 +72,15 @@ def visualize_solution(w: World, solution: Solution) -> None:
     def show_img(img, step: int, action: Action) -> None:
         cv2.imshow("Visualisation", img)
         cv2.waitKey(1)
-        input(f'[Step {step}] Action : {action} ')
+        input(f'[{name} : Step {step}] Action : {action} ')
 
     show_img(img=w.get_image(), step=0, action='Initial state')
     for step, a in enumerate(solution.actions):
         w.step(action=a)
         show_img(img=w.get_image(), step=step+1, action=a)
-    print(f'[G] Goal reached in {len(solution.actions)} steps.')
+    print(f'[G] Goal reached in {len(solution.actions)} steps for {name}.')
 
-def dfs(problem: SearchProblem) -> Optional[Solution]:
+def dfs(problem: SearchProblem, verbose: bool = False) -> Optional[Solution]:
     
     # DFS Method for algorithmic search in a graph.
     stack: list[SearchNode] = [SearchNode(state=problem.initial_state, parent=None, prev_action=None)]
@@ -91,15 +94,17 @@ def dfs(problem: SearchProblem) -> Optional[Solution]:
             visited.add(current)
     
             if problem.is_goal_state(state=current.state):
+                if verbose: print(f'[v] Node visited : {len(visited)}')
                 return Solution.from_node(node=current)
 
             # We get every sucessors to current and add them to the stack
             successors: list = problem.get_successors(state=current.state)
             for s, a in successors: stack.append(SearchNode(state=s, parent=current, prev_action=a))
 
+    if verbose: print(f'[v] Node visited : {len(visited)}')
     return None
 
-def bfs(problem: SearchProblem) -> Optional[Solution]:
+def bfs(problem: SearchProblem, verbose: bool = False) -> Optional[Solution]:
     
     # BFS for algorithmic search in a graph.
     queue: PriorityQueue = PriorityQueue()
@@ -114,15 +119,17 @@ def bfs(problem: SearchProblem) -> Optional[Solution]:
             visited.add(current)
 
             if problem.is_goal_state(state=current.state):
+                if verbose: print(f'[v] Node visited : {len(visited)}')
                 return Solution.from_node(node=current)
 
             # We get every sucessors to current and add them to the queue
             successors: list = problem.get_successors(state=current.state)
             for s, a in successors: queue.push(item=SearchNode(state=s, parent=current, prev_action=a), priority=0)
 
+    if verbose: print(f'[v] Node visited : {len(visited)}')
     return None
 
-def astar(problem: SearchProblem) -> Optional[Solution]:
+def astar(problem: SearchProblem, verbose: bool = False) -> Optional[Solution]:
     
     # A* for algorithmic search in a graph.
     init_node: SearchNode = SearchNode(state=problem.initial_state, parent=None, prev_action=None, cost=0.0)
@@ -141,7 +148,9 @@ def astar(problem: SearchProblem) -> Optional[Solution]:
         if current.state in visited and visited[current.state] <= current.cost: continue
         visited[current.state] = current.cost
 
-        if problem.is_goal_state(state=current.state): return Solution.from_node(node=current)
+        if problem.is_goal_state(state=current.state):
+            if verbose: print(f'[v] Node visited : {len(visited)}')
+            return Solution.from_node(node=current)
 
         for s, a in problem.get_successors(state=current.state):
     
@@ -150,22 +159,82 @@ def astar(problem: SearchProblem) -> Optional[Solution]:
             node = SearchNode(state=s, parent=current, prev_action=a, cost=new_cost)
             queue.push(item=node, priority=new_cost)
 
+    if verbose: print(f'[v] Node visited : {len(visited)}')
     return None
+
+
+class TestHelper:
+
+    def __init__(self, LLEmap: str) -> None:
+        
+        self.world: World = World(LLEmap)
+
+    def get_exit_problem(self) -> ExitProblem:
+        return ExitProblem(self.world)
+    
+    def get_gem_problem(self) -> GemProblem:
+        return GemProblem(self.world)
+    
+    def get_corner_problem(self) -> CornerProblem:
+        return CornerProblem(self.world)
+    
+    def run_tests(self, pr: SearchProblem) -> dict:
+
+        ret: dict = dict()
+
+        separator: str = '\n-----------------------------'
+        print(f'[i] Running tests for {pr}.\n')
+
+
+        for f, n in zip([dfs, bfs, astar], ['DFS', 'BFS', 'ASTAR']):
+            print(f'[i] Running {n} algorithm...')
+            ref: float = time.time()
+            ret[n] = f(problem=pr, verbose=True)
+            delta: float = time.time() - ref
+            if ret[n]: print(f'[i] Solution taking {ret[n].n_steps} steps')
+            print(f'[i] Time elapsed : {round(delta, 3)}s (={round(delta*1000)} ms).{separator}')
+
+        return ret 
+
+    @staticmethod
+    def make_graph(data: dict) -> None:
+        
+        algos = list(data.keys())
+        time_elapsed = [data[algo]['time_elapsed'] for algo in algos]
+        nodes_visited = [data[algo]['nodes_visited'] for algo in algos]
+        colors = ['r', 'g', 'b']
+
+        indices = np.arange(len(algos))
+        bar_width = 0.3
+        
+        plt.figure(figsize=(6, 4))
+        plt.bar(indices, time_elapsed, color=colors, width=bar_width)
+        plt.xlabel('Algorithms')
+        plt.ylabel('Time elapsed (ms)')
+        plt.title('Time elapsed for each algorithm')
+        plt.xticks(indices, algos)
+        plt.show()
+
+        plt.figure(figsize=(6, 4))
+        plt.bar(indices, nodes_visited, color=colors, width=bar_width)
+        plt.xlabel('Algorithms')
+        plt.ylabel('Number of visited nodes')
+        plt.title('Number of visited nodes for each algorithm')
+        plt.xticks(indices, algos)
+        plt.show()
 
 
 
 if __name__ == '__main__':
 
-    world_map: str = \
-    """
-    . . . . . . . . . . . .
-    .  . . . . . . . . G . .
-    S0  . . . . . . . . . . .
-    @  @ @ @ @ @ @ @ @ G . X
-    G  . . . . . . . . . . .
-    """
+    world_map = ''.join(open(r"C:\Users\Antoine\Desktop\Projet-IA\src\map.txt", 'r').readlines()).replace('S', 'S0')
+    test = TestHelper(world_map)
+    sol: dict = test.run_tests(pr=test.get_exit_problem())
 
-    w: World = World(map_str=world_map)
-    p: SearchProblem = CornerProblem(world=w)
-    s: Solution = astar(problem=p)
-    visualize_solution(w=w, solution=s)
+    data: dict = {
+        'DFS': {'time_elapsed': 76, 'nodes_visited': 1052},
+        'BFS': {'time_elapsed': 50, 'nodes_visited': 686},
+        'ASTAR': {'time_elapsed': 44, 'nodes_visited': 342},
+    }
+
+    TestHelper.make_graph(data=data)
