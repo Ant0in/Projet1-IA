@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Generic, Optional, TypeVar
 from lle import Action, WorldState, World
-from priority_queue import PriorityQueue
-from problem import SearchProblem, GemProblem, ExitProblem, CornerProblem
+from src.priority_queue import PriorityQueue
+from src.problem import SearchProblem, GemProblem, ExitProblem, CornerProblem
 import cv2
 import time
 import matplotlib.pyplot as plt
@@ -222,8 +222,3 @@ class TestHelper:
         plt.title('Number of visited nodes for each algorithm')
         plt.xticks(indices, algos)
         plt.show()
-
-
-
-if __name__ == '__main__':
-    ...
