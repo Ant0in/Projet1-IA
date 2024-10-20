@@ -5,7 +5,7 @@
 This project involves implementing the **DFS**, **BFS**, and **A\*** search algorithms to navigate an agent through a map, where it must solve a **problem** (such as *collecting gems*, *finding an exit*, or *visiting specific points*). More info in `./pdf/consignes.pdf`.
 
 <p align="center">
-  <img src="./pdf/map.png" alt="Lamp problem" width="400"/>
+  <img src="./pdf/map.png" alt="search problem" width="400"/>
   <br/>
   <strong>Instance of the Search Problem, where agent must collect gems and find the exit.</strong>
 </p>
